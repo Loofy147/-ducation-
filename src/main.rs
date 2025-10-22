@@ -1,12 +1,8 @@
-mod time_aware;
-mod resource_aware;
-mod adversarial_first;
-
 use colored::*;
 use rand::Rng;
-use time_aware::{AnytimeQuicksort, WcetAnalyzer};
-use resource_aware::{Task, Budgets, ResourceAwareScheduler};
-use adversarial_first::SecureHashMap;
+use computational_fundamentals::time_aware::{AnytimeQuicksort, WcetAnalyzer};
+use computational_fundamentals::resource_aware::{Task, Budgets, ResourceAwareScheduler};
+use computational_fundamentals::adversarial_first::SecureHashMap;
 
 fn main() {
     println!("{}", "🔬 Verification Suite".bold().cyan());

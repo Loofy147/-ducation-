@@ -27,7 +27,7 @@ impl SecureHashMap {
         }
     }
 
-    fn hash(&self, key: &str) -> usize {
+    pub fn hash(&self, key: &str) -> usize {
         let mut h = self.seed1;
         for c in key.chars() {
             h = self.sip_round(h, c as u64, self.seed2);
