@@ -1,0 +1,655 @@
+import React, { useState } from 'react';
+import { Play, CheckCircle, XCircle, AlertTriangle, Clock, Zap, Shield, Layers, Brain } from 'lucide-react';
+
+const VerificationSuite = () => {
+  const [results, setResults] = useState(null);
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const runVerification = async () => {
+    setRunning(true);
+    setProgress(0);
+    const testResults = {
+      timestamp: new Date().toISOString(),
+      tests: [],
+      summary: { passed: 0, failed: 0, warnings: 0 }
+    };
+
+    // TEST 1: Time-Bounded Computation
+    setProgress(20);
+    const test1 = verifyTimeBounds();
+    testResults.tests.push(test1);
+    if (test1.passed) testResults.summary.passed++;
+    else testResults.summary.failed++;
+
+    // TEST 2: Resource Optimization
+    setProgress(40);
+    const test2 = verifyResourceOptimization();
+    testResults.tests.push(test2);
+    if (test2.passed) testResults.summary.passed++;
+    else testResults.summary.failed++;
+
+    // TEST 3: Adversarial Resistance
+    setProgress(60);
+    const test3 = verifyAdversarialResistance();
+    testResults.tests.push(test3);
+    if (test3.passed) testResults.summary.passed++;
+    else testResults.summary.failed++;
+
+    // TEST 4: Algebraic Composition
+    setProgress(80);
+    const test4 = verifyAlgebraicLaws();
+    testResults.tests.push(test4);
+    if (test4.passed) testResults.summary.passed++;
+    else testResults.summary.failed++;
+
+    // TEST 5: Uncertainty Quantification
+    setProgress(100);
+    const test5 = verifyUncertaintyQuantification();
+    testResults.tests.push(test5);
+    if (test5.passed) testResults.summary.passed++;
+    else testResults.summary.failed++;
+
+    setResults(testResults);
+    setRunning(false);
+  };
+
+  const verifyTimeBounds = () => {
+    const test = {
+      name: '⏱️ Time-Bounded Computation',
+      category: 'Real-Time Guarantees',
+      metrics: [],
+      passed: false,
+      details: ''
+    };
+
+    try {
+      class AnytimeSort {
+        constructor(deadline) {
+          this.deadline = deadline;
+          this.startTime = null;
+        }
+
+        sort(arr) {
+          this.startTime = performance.now();
+          return this.timeBoundedSort([...arr], 0, arr.length - 1);
+        }
+
+        timeBoundedSort(arr, lo, hi) {
+          if (this.timeRemaining() <= 0) return arr;
+          if (lo >= hi) return arr;
+
+          const pivot = arr[hi];
+          let i = lo - 1;
+
+          for (let j = lo; j < hi; j++) {
+            if (this.timeRemaining() <= 0) return arr;
+            if (arr[j] < pivot) {
+              i++;
+              [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+          }
+
+          [arr[i + 1], arr[hi]] = [arr[hi], arr[i + 1]];
+          const p = i + 1;
+
+          this.timeBoundedSort(arr, lo, p - 1);
+          this.timeBoundedSort(arr, p + 1, hi);
+
+          return arr;
+        }
+
+        timeRemaining() {
+          return this.deadline - (performance.now() - this.startTime);
+        }
+
+        sortedness(arr) {
+          let inversions = 0;
+          for (let i = 0; i < arr.length - 1; i++) {
+            if (arr[i] > arr[i + 1]) inversions++;
+          }
+          return 1 - (inversions / arr.length);
+        }
+      }
+
+      // Run tests with different deadlines
+      const sizes = [100, 500, 1000];
+      const deadlines = [10, 50, 100];
+
+      for (let size of sizes) {
+        for (let deadline of deadlines) {
+          const data = Array.from({length: size}, () => Math.random() * 1000 | 0);
+          const sorter = new AnytimeSort(deadline);
+          
+          const start = performance.now();
+          const result = sorter.sort(data);
+          const elapsed = performance.now() - start;
+          
+          const quality = sorter.sortedness(result);
+          const meetsDeadline = elapsed <= deadline + 5; // 5ms tolerance
+
+          test.metrics.push({
+            size,
+            deadline,
+            elapsed: elapsed.toFixed(2),
+            quality: quality.toFixed(3),
+            meetsDeadline
+          });
+        }
+      }
+
+      // Check if all tests met deadlines
+      const allMet = test.metrics.every(m => m.meetsDeadline);
+      test.passed = allMet;
+      test.details = allMet 
+        ? `✅ All ${test.metrics.length} tests met deadline constraints`
+        : `❌ Some tests exceeded deadlines`;
+
+    } catch (error) {
+      test.passed = false;
+      test.details = `Error: ${error.message}`;
+    }
+
+    return test;
+  };
+
+  const verifyResourceOptimization = () => {
+    const test = {
+      name: '⚡ Resource-Aware Optimization',
+      category: 'Multi-Objective Scheduling',
+      metrics: [],
+      passed: false,
+      details: ''
+    };
+
+    try {
+      class ResourceScheduler {
+        constructor(budgets) {
+          this.budgets = budgets;
+          this.consumed = {cpu: 0, energy: 0, memory: 0};
+        }
+
+        estimateCost(task) {
+          const ops = task.ops || 1e6;
+          return {
+            cpu: ops / 1e9,
+            energy: ops * 1e-9,
+            memory: task.memory || 1e3
+          };
+        }
+
+        scheduleTask(task) {
+          const cost = this.estimateCost(task);
+          
+          const feasible = Object.keys(cost).every(r =>
+            this.consumed[r] + cost[r] <= this.budgets[r]
+          );
+
+          if (feasible) {
+            for (let r in cost) this.consumed[r] += cost[r];
+            return {scheduled: true, cost};
+          }
+
+          return {scheduled: false, cost};
+        }
+
+        getUtilization() {
+          const util = {};
+          for (let r in this.budgets) {
+            util[r] = this.consumed[r] / this.budgets[r];
+          }
+          return util;
+        }
+      }
+
+      const scheduler = new ResourceScheduler({
+        cpu: 10,
+        energy: 100,
+        memory: 1e9
+      });
+
+      const tasks = [
+        {name: 'Task1', ops: 1e9, memory: 1e8},
+        {name: 'Task2', ops: 5e9, memory: 5e8},
+        {name: 'Task3', ops: 2e9, memory: 2e8},
+        {name: 'Task4', ops: 1e10, memory: 1e9}
+      ];
+
+      let scheduled = 0;
+      let rejected = 0;
+
+      for (let task of tasks) {
+        const result = scheduler.scheduleTask(task);
+        if (result.scheduled) scheduled++;
+        else rejected++;
+
+        test.metrics.push({
+          task: task.name,
+          scheduled: result.scheduled,
+          cost: result.cost
+        });
+      }
+
+      const utilization = scheduler.getUtilization();
+      const avgUtil = Object.values(utilization).reduce((a,b) => a+b) / 3;
+
+      test.passed = scheduled > 0 && avgUtil > 0.3 && avgUtil < 1.0;
+      test.details = `Scheduled: ${scheduled}, Rejected: ${rejected}, Avg Utilization: ${(avgUtil * 100).toFixed(1)}%`;
+
+    } catch (error) {
+      test.passed = false;
+      test.details = `Error: ${error.message}`;
+    }
+
+    return test;
+  };
+
+  const verifyAdversarialResistance = () => {
+    const test = {
+      name: '🛡️ Adversarial Resistance',
+      category: 'Security-First Design',
+      metrics: [],
+      passed: false,
+      details: ''
+    };
+
+    try {
+      class SecureHashMap {
+        constructor() {
+          this.seed = Math.floor(Math.random() * 0xFFFFFFFF);
+          this.buckets = Array(16).fill(null).map(() => []);
+          this.collisionLimit = 5;
+          this.rehashCount = 0;
+        }
+
+        hash(key) {
+          let h = this.seed;
+          const str = String(key);
+          for (let i = 0; i < str.length; i++) {
+            h = ((h << 5) - h) + str.charCodeAt(i);
+            h = h & h;
+          }
+          return Math.abs(h) % this.buckets.length;
+        }
+
+        set(key, value) {
+          const idx = this.hash(key);
+          if (this.buckets[idx].length >= this.collisionLimit) {
+            this.rehash();
+            return this.set(key, value);
+          }
+          this.buckets[idx].push([key, value]);
+        }
+
+        rehash() {
+          this.rehashCount++;
+          this.seed = Math.floor(Math.random() * 0xFFFFFFFF);
+          const old = this.buckets;
+          this.buckets = Array(this.buckets.length).fill(null).map(() => []);
+          for (let bucket of old) {
+            for (let [k, v] of bucket) {
+              const idx = this.hash(k);
+              this.buckets[idx].push([k, v]);
+            }
+          }
+        }
+
+        getMaxChain() {
+          return Math.max(...this.buckets.map(b => b.length));
+        }
+      }
+
+      const map = new SecureHashMap();
+
+      // Normal operations
+      for (let i = 0; i < 20; i++) {
+        map.set(`normal${i}`, `value${i}`);
+      }
+      const normalMaxChain = map.getMaxChain();
+
+      // Simulate collision attack
+      for (let i = 0; i < 100; i++) {
+        map.set(`attack${i}`, `payload${i}`);
+      }
+      const attackMaxChain = map.getMaxChain();
+
+      test.metrics.push({
+        phase: 'Normal',
+        maxChain: normalMaxChain,
+        rehashes: 0
+      });
+
+      test.metrics.push({
+        phase: 'Under Attack',
+        maxChain: attackMaxChain,
+        rehashes: map.rehashCount
+      });
+
+      // Success if rehashing triggered and chain length bounded
+      test.passed = map.rehashCount > 0 && attackMaxChain < 10;
+      test.details = `Rehashes: ${map.rehashCount}, Max chain: ${attackMaxChain} (limit: 10)`;
+
+    } catch (error) {
+      test.passed = false;
+      test.details = `Error: ${error.message}`;
+    }
+
+    return test;
+  };
+
+  const verifyAlgebraicLaws = () => {
+    const test = {
+      name: '🔢 Algebraic Composition Laws',
+      category: 'Mathematical Correctness',
+      metrics: [],
+      passed: false,
+      details: ''
+    };
+
+    try {
+      class Monoid {
+        constructor(empty, combine) {
+          this.empty = empty;
+          this.combine = combine;
+        }
+
+        checkIdentity(values) {
+          for (let v of values) {
+            const leftId = JSON.stringify(this.combine(this.empty, v));
+            const rightId = JSON.stringify(this.combine(v, this.empty));
+            const original = JSON.stringify(v);
+            
+            if (leftId !== original || rightId !== original) {
+              return false;
+            }
+          }
+          return true;
+        }
+
+        checkAssociativity(values) {
+          for (let i = 0; i < values.length - 2; i++) {
+            const [a, b, c] = values.slice(i, i + 3);
+            const left = this.combine(this.combine(a, b), c);
+            const right = this.combine(a, this.combine(b, c));
+            
+            if (JSON.stringify(left) !== JSON.stringify(right)) {
+              return false;
+            }
+          }
+          return true;
+        }
+      }
+
+      // Test list concatenation monoid
+      const listMonoid = new Monoid([], (a, b) => [...a, ...b]);
+      const testLists = [[], [1], [2, 3], [4, 5, 6]];
+
+      const identityHolds = listMonoid.checkIdentity(testLists);
+      const assocHolds = listMonoid.checkAssociativity(testLists);
+
+      test.metrics.push({
+        monoid: 'List Concatenation',
+        identity: identityHolds,
+        associativity: assocHolds
+      });
+
+      // Test sum monoid
+      const sumMonoid = new Monoid(0, (a, b) => a + b);
+      const testNumbers = [0, 1, 5, 10, 20];
+
+      const sumIdentity = sumMonoid.checkIdentity(testNumbers);
+      const sumAssoc = sumMonoid.checkAssociativity(testNumbers);
+
+      test.metrics.push({
+        monoid: 'Sum',
+        identity: sumIdentity,
+        associativity: sumAssoc
+      });
+
+      test.passed = identityHolds && assocHolds && sumIdentity && sumAssoc;
+      test.details = test.passed 
+        ? '✅ All algebraic laws verified'
+        : '❌ Some laws violated';
+
+    } catch (error) {
+      test.passed = false;
+      test.details = `Error: ${error.message}`;
+    }
+
+    return test;
+  };
+
+  const verifyUncertaintyQuantification = () => {
+    const test = {
+      name: '📊 Uncertainty Quantification',
+      category: 'Probabilistic Computing',
+      metrics: [],
+      passed: false,
+      details: ''
+    };
+
+    try {
+      class UncertainValue {
+        constructor(mean, stddev) {
+          this.mean = mean;
+          this.stddev = stddev;
+        }
+
+        sample() {
+          const u1 = Math.random();
+          const u2 = Math.random();
+          const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+          return this.mean + z * this.stddev;
+        }
+
+        add(other) {
+          return new UncertainValue(
+            this.mean + other.mean,
+            Math.sqrt(this.stddev ** 2 + other.stddev ** 2)
+          );
+        }
+
+        confidence(value) {
+          const z = (value - this.mean) / this.stddev;
+          return 0.5 * (1 + this.erf(z / Math.sqrt(2)));
+        }
+
+        erf(x) {
+          const sign = x >= 0 ? 1 : -1;
+          x = Math.abs(x);
+          const t = 1 / (1 + 0.3275911 * x);
+          const y = 1 - (((((1.061405429 * t + -1.453152027) * t) + 1.421413741) * t + -0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+          return sign * y;
+        }
+      }
+
+      const x = new UncertainValue(10, 2);
+      const y = new UncertainValue(5, 1);
+      const sum = x.add(y);
+
+      // Verify uncertainty propagation
+      const expectedMean = 15;
+      const expectedStddev = Math.sqrt(5);
+
+      const meanCorrect = Math.abs(sum.mean - expectedMean) < 0.01;
+      const stddevCorrect = Math.abs(sum.stddev - expectedStddev) < 0.01;
+
+      test.metrics.push({
+        operation: 'Addition',
+        expected: `${expectedMean} ± ${expectedStddev.toFixed(2)}`,
+        actual: `${sum.mean} ± ${sum.stddev.toFixed(2)}`,
+        correct: meanCorrect && stddevCorrect
+      });
+
+      // Verify confidence intervals
+      const conf90 = x.confidence(x.mean + 1.645 * x.stddev);
+      const confCorrect = Math.abs(conf90 - 0.95) < 0.05;
+
+      test.metrics.push({
+        operation: 'Confidence',
+        expected: '~0.95',
+        actual: conf90.toFixed(3),
+        correct: confCorrect
+      });
+
+      test.passed = meanCorrect && stddevCorrect && confCorrect;
+      test.details = test.passed
+        ? '✅ Uncertainty propagation correct'
+        : '❌ Uncertainty calculations incorrect';
+
+    } catch (error) {
+      test.passed = false;
+      test.details = `Error: ${error.message}`;
+    }
+
+    return test;
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400">
+            🔬 Verification Suite
+          </h1>
+          <p className="text-xl text-blue-300">
+            Proving the Missing Fundamentals Actually Work
+          </p>
+        </div>
+
+        <div className="bg-slate-900/80 backdrop-blur rounded-xl p-6 mb-8 border-2 border-blue-600">
+          <button
+            onClick={runVerification}
+            disabled={running}
+            className={`w-full py-4 px-6 rounded-lg font-bold text-lg transition-all ${
+              running
+                ? 'bg-gray-600 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700'
+            }`}
+          >
+            {running ? (
+              <span className="flex items-center justify-center gap-3">
+                <Clock className="animate-spin" />
+                Running Tests... {progress}%
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-3">
+                <Play />
+                Run Complete Verification Suite
+              </span>
+            )}
+          </button>
+
+          {running && (
+            <div className="mt-4">
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {results && (
+          <div className="space-y-6">
+            <div className="bg-slate-900/80 backdrop-blur rounded-xl p-6 border-2 border-green-600">
+              <h2 className="text-2xl font-bold mb-4 text-green-400">Test Summary</h2>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-green-900/30 p-4 rounded-lg text-center">
+                  <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-400" />
+                  <div className="text-3xl font-bold">{results.summary.passed}</div>
+                  <div className="text-sm text-gray-400">Passed</div>
+                </div>
+                <div className="bg-red-900/30 p-4 rounded-lg text-center">
+                  <XCircle className="w-8 h-8 mx-auto mb-2 text-red-400" />
+                  <div className="text-3xl font-bold">{results.summary.failed}</div>
+                  <div className="text-sm text-gray-400">Failed</div>
+                </div>
+                <div className="bg-yellow-900/30 p-4 rounded-lg text-center">
+                  <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
+                  <div className="text-3xl font-bold">{results.summary.warnings}</div>
+                  <div className="text-sm text-gray-400">Warnings</div>
+                </div>
+              </div>
+            </div>
+
+            {results.tests.map((test, idx) => (
+              <div
+                key={idx}
+                className={`bg-slate-900/80 backdrop-blur rounded-xl p-6 border-2 ${
+                  test.passed ? 'border-green-600' : 'border-red-600'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-2xl font-bold mb-1">{test.name}</h3>
+                    <p className="text-sm text-gray-400">{test.category}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {test.passed ? (
+                      <CheckCircle className="w-8 h-8 text-green-400" />
+                    ) : (
+                      <XCircle className="w-8 h-8 text-red-400" />
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-black/40 p-4 rounded-lg mb-4">
+                  <p className="font-mono text-sm">{test.details}</p>
+                </div>
+
+                {test.metrics && test.metrics.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          {Object.keys(test.metrics[0]).map((key) => (
+                            <th key={key} className="px-4 py-2 text-left text-gray-400">
+                              {key}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {test.metrics.map((metric, midx) => (
+                          <tr key={midx} className="border-b border-gray-800">
+                            {Object.values(metric).map((value, vidx) => (
+                              <td key={vidx} className="px-4 py-2 font-mono">
+                                {typeof value === 'boolean' ? (
+                                  value ? (
+                                    <span className="text-green-400">✓</span>
+                                  ) : (
+                                    <span className="text-red-400">✗</span>
+                                  )
+                                ) : (
+                                  String(value)
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!results && !running && (
+          <div className="bg-slate-900/50 backdrop-blur rounded-xl p-12 text-center border-2 border-dashed border-gray-700">
+            <Brain className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+            <p className="text-xl text-gray-400">
+              Click "Run Complete Verification Suite" to test all implementations
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default VerificationSuite;
