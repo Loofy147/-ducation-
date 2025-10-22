@@ -11,6 +11,10 @@ path = "src/main.rs"
 name = "edge_simulation"
 path = "src/bin/edge_simulation.rs"
 
+[[bin]]
+name = "smart_balancer"
+path = "src/bin/smart_balancer.rs"
+
 [dependencies]
 rand = { version = "0.8.5", features = ["small_rng"] }
 statrs = "0.16.0"
@@ -18,6 +22,10 @@ colored = "2.0.0"
 anyhow = "1.0.75"
 linked-hash-map = "0.5.6"
 pprof = { version = "0.13", features = ["flamegraph"], optional = true }
+tokio = { version = "1", features = ["full"] }
+hyper = { version = "1", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
 
 [features]
 profiling = ["pprof"]

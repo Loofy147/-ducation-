@@ -43,6 +43,16 @@ impl SecureHashMap {
         v
     }
 
+    pub fn get(&self, key: &str) -> Option<&String> {
+        let idx = self.hash(key);
+        for (k, v) in self.buckets[idx].iter() {
+            if k == key {
+                return Some(v);
+            }
+        }
+        None
+    }
+
     pub fn set(&mut self, key: &str, value: &str) {
         let mut idx = self.hash(key);
         if self.buckets[idx].len() >= self.max_chain_length {
