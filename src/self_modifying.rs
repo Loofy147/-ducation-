@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use linked_hash_map::LinkedHashMap;
+use std::collections::HashMap;
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum CacheStrategy {
@@ -79,9 +79,9 @@ impl<K: Eq + std::hash::Hash + Clone, V: Clone> SelfOptimizingCache<K, V> {
 
     fn lfu_put(&mut self, key: K, value: V) {
         if self.lfu_map.len() >= self.capacity {
-             if let Some((_freq, keys)) = self.lfu_freq.iter_mut().next() {
+            if let Some((_freq, keys)) = self.lfu_freq.iter_mut().next() {
                 if let Some(key_to_evict) = keys.pop() {
-                     self.lfu_map.remove(&key_to_evict);
+                    self.lfu_map.remove(&key_to_evict);
                 }
                 if keys.is_empty() {
                     self.lfu_freq.pop_front();
@@ -99,13 +99,20 @@ impl<K: Eq + std::hash::Hash + Clone, V: Clone> SelfOptimizingCache<K, V> {
                 self.lfu_freq.remove(&freq);
             }
         }
-        self.lfu_freq.entry(freq + 1).or_insert_with(Vec::new).push(key);
+        self.lfu_freq
+            .entry(freq + 1)
+            .or_insert_with(Vec::new)
+            .push(key);
     }
 
     fn adapt_strategy(&mut self) {
         if (self.hits + self.misses) >= 100 {
             let hit_rate = self.hits as f64 / (self.hits + self.misses) as f64;
-            let new_strategy = if hit_rate > 0.6 { CacheStrategy::LFU } else { CacheStrategy::LRU };
+            let new_strategy = if hit_rate > 0.6 {
+                CacheStrategy::LFU
+            } else {
+                CacheStrategy::LRU
+            };
             if new_strategy != self.strategy {
                 println!("Adapting strategy to {:?}", new_strategy);
                 self.migrate_cache(&new_strategy);
@@ -119,14 +126,22 @@ impl<K: Eq + std::hash::Hash + Clone, V: Clone> SelfOptimizingCache<K, V> {
     fn migrate_cache(&mut self, new_strategy: &CacheStrategy) {
         match new_strategy {
             CacheStrategy::LFU => {
-                let data_to_migrate: Vec<_> = self.lru_map.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+                let data_to_migrate: Vec<_> = self
+                    .lru_map
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.clone()))
+                    .collect();
                 self.lru_map.clear();
                 for (key, value) in data_to_migrate {
                     self.lfu_put(key, value);
                 }
-            },
+            }
             CacheStrategy::LRU => {
-                let data_to_migrate: Vec<_> = self.lfu_map.iter().map(|(k, (v, _))| (k.clone(), v.clone())).collect();
+                let data_to_migrate: Vec<_> = self
+                    .lfu_map
+                    .iter()
+                    .map(|(k, (v, _))| (k.clone(), v.clone()))
+                    .collect();
                 self.lfu_map.clear();
                 self.lfu_freq.clear();
                 for (key, value) in data_to_migrate {

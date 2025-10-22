@@ -1,4 +1,4 @@
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 use std::collections::LinkedList;
 
 pub struct SecureHashMap {
@@ -70,7 +70,8 @@ impl SecureHashMap {
         self.seed1 = rng.gen();
         self.seed2 = rng.gen();
 
-        let old_buckets = std::mem::replace(&mut self.buckets, vec![LinkedList::new(); self.capacity]);
+        let old_buckets =
+            std::mem::replace(&mut self.buckets, vec![LinkedList::new(); self.capacity]);
         self.collision_count = 0;
 
         for bucket in old_buckets {

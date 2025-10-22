@@ -16,7 +16,10 @@ where
 {
     /// Creates a new Monoid.
     pub fn new(identity: T, operation: F) -> Self {
-        Monoid { identity, operation }
+        Monoid {
+            identity,
+            operation,
+        }
     }
 
     pub fn identity(&self) -> T {
