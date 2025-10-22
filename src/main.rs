@@ -59,22 +59,22 @@ fn verify_resource_optimization() -> bool {
     let tasks = vec![
         Task {
             name: "ML_Training".to_string(),
-            operations: 1e10,
+            operations: UncertainValue::new(1e10, 0.0),
             data_size: 1e8,
             network: true,
             value: 100.0,
         },
         Task {
             name: "Video_Encode".to_string(),
-            operations: 5e9,
+            operations: UncertainValue::new(5e9, 0.0),
             data_size: 5e8,
             network: false,
             value: 50.0,
         },
     ];
 
-    let ml_training_scheduled = scheduler.schedule_task(&tasks[0]);
-    let video_encode_rejected = !scheduler.schedule_task(&tasks[1]);
+    let ml_training_scheduled = scheduler.schedule_task(&tasks[0], 0.1);
+    let video_encode_rejected = !scheduler.schedule_task(&tasks[1], 0.1);
 
     if ml_training_scheduled {
         println!("✅ {} scheduled", tasks[0].name);
@@ -181,27 +181,23 @@ fn verify_self_modification() -> bool {
 fn verify_causal_reasoning() -> bool {
     println!("{}", "🧠 Causal Reasoning".bold());
     let mut data = Vec::new();
-    // Group A (Small Stones): Treatment is better (90% vs 85%)
-    for _ in 0..9 { data.push(TreatmentData { treated: true, outcome: true, confounding_variable: "A".to_string() }); }
-    for _ in 0..1 { data.push(TreatmentData { treated: true, outcome: false, confounding_variable: "A".to_string() }); }
-    for _ in 0..17 { data.push(TreatmentData { treated: false, outcome: true, confounding_variable: "A".to_string() }); }
-    for _ in 0..3 { data.push(TreatmentData { treated: false, outcome: false, confounding_variable: "A".to_string() }); }
+    // Group "Easy": Legacy used more. Optimized is better (95% vs 90%).
+    for _ in 0..20 { data.push(TreatmentData { treated: true, outcome: rand::thread_rng().gen_bool(0.95), confounding_variable: "Easy".to_string() }); }
+    for _ in 0..80 { data.push(TreatmentData { treated: false, outcome: rand::thread_rng().gen_bool(0.90), confounding_variable: "Easy".to_string() }); }
 
-    // Group B (Large Stones): Treatment is better (20% vs 10%)
-    for _ in 0..2 { data.push(TreatmentData { treated: true, outcome: true, confounding_variable: "B".to_string() }); }
-    for _ in 0..8 { data.push(TreatmentData { treated: true, outcome: false, confounding_variable: "B".to_string() }); }
-    for _ in 0..1 { data.push(TreatmentData { treated: false, outcome: true, confounding_variable: "B".to_string() }); }
-    for _ in 0..9 { data.push(TreatmentData { treated: false, outcome: false, confounding_variable: "B".to_string() }); }
+    // Group "Hard": Optimized used more. Optimized is better (30% vs 20%).
+    for _ in 0..80 { data.push(TreatmentData { treated: true, outcome: rand::thread_rng().gen_bool(0.30), confounding_variable: "Hard".to_string() }); }
+    for _ in 0..20 { data.push(TreatmentData { treated: false, outcome: rand::thread_rng().gen_bool(0.20), confounding_variable: "Hard".to_string() }); }
 
-    let (overall_treated_rate, overall_untreated_rate) = analyze_data(&data);
-    println!("Overall: treated_rate={:.2}, untreated_rate={:.2}", overall_treated_rate, overall_untreated_rate);
+    let (overall_optimized, overall_legacy) = analyze_data(&data);
+    println!("Overall success rates: Optimized={:.2}, Legacy={:.2}", overall_optimized, overall_legacy);
 
     let by_group = analyze_data_by_group(&data);
-    for (group, (t_rate, u_rate)) in &by_group {
-        println!("Group {}: treated_rate={:.2}, untreated_rate={:.2}", group, t_rate, u_rate);
+    for (group, (optimized, legacy)) in &by_group {
+        println!("  Group {}: Optimized={:.2}, Legacy={:.2}", group, optimized, legacy);
     }
 
-    let paradox = overall_treated_rate < overall_untreated_rate;
+    let paradox = overall_optimized < overall_legacy;
     let correct_conclusion = by_group.values().all(|(t, u)| t > u);
 
     println!("Paradox observed: {}", paradox);
