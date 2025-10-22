@@ -6,7 +6,7 @@ where
     /// The identity element of the monoid.
     identity: T,
     /// The binary operation of the monoid.
-    operation: F,
+    pub operation: F,
 }
 
 impl<T, F> Monoid<T, F>
@@ -16,7 +16,14 @@ where
 {
     /// Creates a new Monoid.
     pub fn new(identity: T, operation: F) -> Self {
-        Monoid { identity, operation }
+        Monoid {
+            identity,
+            operation,
+        }
+    }
+
+    pub fn identity(&self) -> T {
+        self.identity.clone()
     }
 
     /// Checks if the identity law holds for a given set of values.
@@ -44,4 +51,23 @@ where
             left_assoc == right_assoc
         })
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TaskStats {
+    pub tasks_processed: u64,
+    pub data_processed: f64,
+}
+
+pub fn task_stats_monoid() -> Monoid<TaskStats, fn(TaskStats, TaskStats) -> TaskStats> {
+    Monoid::new(
+        TaskStats {
+            tasks_processed: 0,
+            data_processed: 0.0,
+        },
+        |a, b| TaskStats {
+            tasks_processed: a.tasks_processed + b.tasks_processed,
+            data_processed: a.data_processed + b.data_processed,
+        },
+    )
 }
