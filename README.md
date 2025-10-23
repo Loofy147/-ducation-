@@ -20,14 +20,22 @@ This project is not just a collection of algorithms; it is a demonstration of ho
 
 ## Getting Started
 
-This project is a standard Rust crate with three binaries.
+This project is a standard Rust crate with two binaries and a library.
 
-### Running the Verification Suite
+### Running the Test Suite
 
-The `verification_suite` runs a series of tests to demonstrate each of the seven fundamentals in isolation.
+The project includes a comprehensive test suite that verifies the correctness of each fundamental.
 
 ```bash
-cargo run --bin verification_suite
+cargo test
+```
+
+### Building the Documentation
+
+The library is fully documented. To build and view the documentation, run:
+
+```bash
+cargo doc --open
 ```
 
 ### Running the Edge Server Simulation
@@ -48,4 +56,17 @@ cargo run --bin smart_balancer
 Once running, you can send requests to it:
 ```bash
 curl http://127.0.0.1:3000/some/path
+```
+
+---
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request or open an issue.
+
+Before contributing, please ensure that all tests pass and that the code is formatted correctly:
+
+```bash
+cargo test
+cargo fmt
 ```
