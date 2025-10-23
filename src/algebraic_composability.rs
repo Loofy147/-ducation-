@@ -3,7 +3,6 @@ pub struct Monoid<T, F>
 where
     F: Fn(T, T) -> T,
 {
-    /// The identity element of the monoid.
     identity: T,
     /// The binary operation of the monoid.
     pub operation: F,
@@ -14,7 +13,7 @@ where
     T: Clone + PartialEq,
     F: Fn(T, T) -> T,
 {
-    /// Creates a new Monoid.
+    /// Creates a new `Monoid`.
     pub fn new(identity: T, operation: F) -> Self {
         Monoid {
             identity,
@@ -22,6 +21,7 @@ where
         }
     }
 
+    /// Returns the identity element of the monoid.
     pub fn identity(&self) -> T {
         self.identity.clone()
     }
@@ -54,11 +54,15 @@ where
 }
 
 #[derive(Debug, Clone, PartialEq)]
+/// A struct to hold statistics about processed tasks.
 pub struct TaskStats {
+    /// The number of tasks processed.
     pub tasks_processed: u64,
+    /// The amount of data processed.
     pub data_processed: f64,
 }
 
+/// Creates a `Monoid` for `TaskStats`.
 pub fn task_stats_monoid() -> Monoid<TaskStats, fn(TaskStats, TaskStats) -> TaskStats> {
     Monoid::new(
         TaskStats {
@@ -70,4 +74,26 @@ pub fn task_stats_monoid() -> Monoid<TaskStats, fn(TaskStats, TaskStats) -> Task
             data_processed: a.data_processed + b.data_processed,
         },
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_verify_algebraic_laws() {
+        let sum_monoid = Monoid::new(0, |a, b| a + b);
+        let sum_values = vec![1, 2, 3, 4, 5];
+        let sum_identity = sum_monoid.check_identity_law(&sum_values);
+        let sum_associativity = sum_monoid.check_associativity_law(&sum_values);
+        assert!(sum_identity, "Sum monoid should satisfy the identity law");
+        assert!(sum_associativity, "Sum monoid should satisfy the associativity law");
+
+        let list_monoid = Monoid::new(Vec::<i32>::new(), |mut a, mut b| { a.append(&mut b); a });
+        let list_values = vec![vec![1], vec![2, 3], vec![4, 5, 6]];
+        let list_identity = list_monoid.check_identity_law(&list_values);
+        let list_associativity = list_monoid.check_associativity_law(&list_values);
+        assert!(list_identity, "List monoid should satisfy the identity law");
+        assert!(list_associativity, "List monoid should satisfy the associativity law");
+    }
 }

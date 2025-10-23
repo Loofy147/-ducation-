@@ -1,6 +1,9 @@
 use rand::{thread_rng, Rng};
 use std::collections::LinkedList;
 
+/// A HashMap implementation that is resistant to collision attacks.
+/// It uses a random seed for hashing and rehashes with a new seed
+/// when a high number of collisions is detected.
 pub struct SecureHashMap {
     capacity: usize,
     seed1: u64,
@@ -12,7 +15,14 @@ pub struct SecureHashMap {
     rehash_count: u32,
 }
 
+impl Default for SecureHashMap {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SecureHashMap {
+    /// Creates a new `SecureHashMap` with default parameters.
     pub fn new() -> Self {
         let mut rng = thread_rng();
         SecureHashMap {
@@ -27,6 +37,7 @@ impl SecureHashMap {
         }
     }
 
+    /// Hashes the given key.
     pub fn hash(&self, key: &str) -> usize {
         let mut h = self.seed1;
         for c in key.chars() {
@@ -37,12 +48,13 @@ impl SecureHashMap {
 
     fn sip_round(&self, v: u64, m: u64, k: u64) -> u64 {
         let mut v = v.wrapping_add(m);
-        v = v ^ k;
+        v ^= k;
         v = v.rotate_left(13);
         v = v.wrapping_add(k);
         v
     }
 
+    /// Retrieves a value from the map.
     pub fn get(&self, key: &str) -> Option<&String> {
         let idx = self.hash(key);
         for (k, v) in self.buckets[idx].iter() {
@@ -53,6 +65,7 @@ impl SecureHashMap {
         None
     }
 
+    /// Inserts a key-value pair into the map.
     pub fn set(&mut self, key: &str, value: &str) {
         let mut idx = self.hash(key);
         if self.buckets[idx].len() >= self.max_chain_length {
@@ -91,5 +104,24 @@ impl SecureHashMap {
                 self.buckets[new_idx].push_back((key, value));
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_verify_adversarial_resistance() {
+        let mut map = SecureHashMap::new();
+        for i in 0..20 {
+            map.set(&format!("user{}", i), &format!("data{}", i));
+        }
+
+        for i in 0..100 {
+            map.set(&format!("attack_payload_{}", i), &format!("malicious_{}", i));
+        }
+        // The test passes if it doesn't panic or enter an infinite loop,
+        // which is a basic check for the collision resistance mechanism.
     }
 }

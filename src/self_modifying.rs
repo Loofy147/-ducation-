@@ -1,12 +1,16 @@
 use linked_hash_map::LinkedHashMap;
 use std::collections::HashMap;
 
+/// An enumeration of possible cache eviction strategies.
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum CacheStrategy {
+    /// Least Recently Used.
     LRU,
+    /// Least Frequently Used.
     LFU,
 }
 
+/// A cache that can dynamically switch its eviction strategy based on workload patterns.
 pub struct SelfOptimizingCache<K, V> {
     capacity: usize,
     strategy: CacheStrategy,
@@ -18,6 +22,7 @@ pub struct SelfOptimizingCache<K, V> {
 }
 
 impl<K: Eq + std::hash::Hash + Clone, V: Clone> SelfOptimizingCache<K, V> {
+    /// Creates a new `SelfOptimizingCache` with the given capacity.
     pub fn new(capacity: usize) -> Self {
         SelfOptimizingCache {
             capacity,
@@ -30,6 +35,7 @@ impl<K: Eq + std::hash::Hash + Clone, V: Clone> SelfOptimizingCache<K, V> {
         }
     }
 
+    /// Retrieves a value from the cache.
     pub fn get(&mut self, key: &K) -> Option<V> {
         let result = match self.strategy {
             CacheStrategy::LRU => self.lru_get(key),
@@ -45,6 +51,7 @@ impl<K: Eq + std::hash::Hash + Clone, V: Clone> SelfOptimizingCache<K, V> {
         result
     }
 
+    /// Inserts a key-value pair into the cache.
     pub fn put(&mut self, key: K, value: V) {
         match self.strategy {
             CacheStrategy::LRU => self.lru_put(key, value),
@@ -89,7 +96,7 @@ impl<K: Eq + std::hash::Hash + Clone, V: Clone> SelfOptimizingCache<K, V> {
             }
         }
         self.lfu_map.insert(key.clone(), (value, 1));
-        self.lfu_freq.entry(1).or_insert_with(Vec::new).push(key);
+        self.lfu_freq.entry(1).or_default().push(key);
     }
 
     fn update_freq(&mut self, key: K, freq: usize) {
@@ -101,7 +108,7 @@ impl<K: Eq + std::hash::Hash + Clone, V: Clone> SelfOptimizingCache<K, V> {
         }
         self.lfu_freq
             .entry(freq + 1)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(key);
     }
 
@@ -151,7 +158,37 @@ impl<K: Eq + std::hash::Hash + Clone, V: Clone> SelfOptimizingCache<K, V> {
         }
     }
 
+    /// Returns the current `CacheStrategy`.
     pub fn get_strategy(&self) -> &CacheStrategy {
         &self.strategy
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_verify_self_modification() {
+        let mut cache = SelfOptimizingCache::new(10);
+        assert_eq!(*cache.get_strategy(), CacheStrategy::LRU, "Initial strategy should be LRU");
+
+        // Fill the cache
+        for i in 0..10 {
+            cache.put(i, i);
+        }
+
+        // Simulate a workload that favors LFU (high hit rate)
+        for _ in 0..100 {
+            cache.get(&0);
+        }
+
+        assert_eq!(*cache.get_strategy(), CacheStrategy::LFU, "Strategy should adapt to LFU");
+
+        // Simulate a workload that favors LRU (low hit rate)
+        for i in 0..100 {
+            cache.get(&(i % 20)); // Access a wider range of keys
+        }
+        assert_eq!(*cache.get_strategy(), CacheStrategy::LRU, "Strategy should adapt back to LRU");
     }
 }
